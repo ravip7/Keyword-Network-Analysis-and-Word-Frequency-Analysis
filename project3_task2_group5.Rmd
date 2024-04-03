@@ -1,0 +1,654 @@
+---
+title: "Untitled"
+author: "Ravi Patel"
+date: "2022-12-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidytext)
+library(janeaustenr)
+library(ggplot2)
+library(tidyr)
+library(igraph)
+library(ggraph)
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+library(plotly)
+library(readr)
+```
+
+```{r}
+
+year_2017<- read_csv("2017.csv")
+```
+
+
+```{r}
+year_2017 <- separate(year_2017,date,into = c("Year", "Month", "Date&Time"),sep = "-",remove = TRUE, convert = TRUE, fill = "right")
+head(year_2017,5)
+```
+
+```{r}
+
+year_2017$tweet <- tolower(year_2017$tweet)
+
+twt_2017 <- select(year_2017, Year, tweet)%>% 
+  filter(Year=="2017")
+year_2017 =data.frame(format(as.Date(as.character(twt_2017$Year), format="%Y"),year_2017$tweet))
+head(twt_2017,5)
+```
+
+```{r}
+
+remove_regex <- "https?://[^\\s]+|&amp;|&lt;|&gt;|\bRT\\b|t.co|http|@|[0-9]"
+wds_2017 <- twt_2017 %>% 
+  filter(!str_detect(tweet, "^RT")) %>%
+  mutate(tweet = str_remove_all(tweet, remove_regex)) %>%
+  unnest_tokens(word, tweet) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word, "[a-z]"))
+```
+
+```{r}
+wdscount_2017<- wds_2017 %>%
+  group_by(word) %>%
+  count()%>%
+  arrange(-n)
+```
+
+```{r}
+totwds<-data.frame(sum(wdscount_2017$n))
+```
+
+```{r}
+wdscount_2017<- data.frame(wdscount_2017,totalwds)
+freq_2017 <- wdscount_2017$Frequency <- (wdscount_2017$n/wdscount_2017$sum.wdscount_2017.n.)
+```
+
+```{r}
+Wds_2017<- mutate(wdscount_2017,freq_2017,rank=row_number())
+head(Wds_2017,5)
+```
+
+```{r}
+top10_2017 <- head(wdscount_2017,10)
+top10_2017
+```
+
+```{r}
+plot_ly(top10_2017, type='bar', x = top10_2017$word , y = top10_2017$Frequency)
+```
+
+```{r}
+ggplot(Wds_2017,aes(rank,Frequency)) + 
+  geom_line(size = 1.5, alpha = 1, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+```{r}
+big_2017 <- twt_2017 %>%
+ unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+head(big_2017,5)
+```
+
+
+```{r}
+
+big_2017<- big_2017 %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+big_2017 <- big_2017 %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)%>%
+  mutate(word1 = str_remove_all(word1, remove_regex))%>%
+  mutate(word2 = str_remove_all(word2, remove_regex))
+```
+
+```{r}
+countbig_2017<- big_2017 %>%
+  count(word1, word2)%>%
+  arrange(-n)%>%
+  na_if("")%>%
+  na.omit()
+```
+
+```{r}
+
+biggraph_2017 <- countbig_2017 %>%
+  filter(n>5)%>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "open", length = unit(.4, "inches"))
+ggraph(biggraph_2017, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.09, 'inches'), color="black") +
+  geom_node_point(color = "red", size = 4) +
+  geom_node_text(aes(label = name), vjust = 1.2, hjust = 1.2) +
+  theme_void()
+```
+
+```{r}
+year_2018 <- read_csv("2018.csv")
+```
+
+```{r}
+year_2018 <- separate(year_2018,date,into = c("Year", "Month", "Date&Time"),sep = "-",remove = TRUE, convert = TRUE, fill = "right")
+head(year_2018,5)
+```
+
+```{r}
+
+year_2018$tweet <- tolower(year_2018$tweet)
+
+twt_2018 <- select(year_2018, Year, tweet)%>% filter(Year=="2018")
+year_2018 =data.frame(format(as.Date(as.character(twt_2018$Year), format="%Y"),year_2018$tweet))
+head(twt_2018,5)
+```
+
+```{r}
+
+remove_regex <- "https?://[^\\s]+|&amp;|&lt;|&gt;|\bRT\\b|t.co|http|@|[0-9]"
+wds_2018 <- twt_2018 %>% 
+  filter(!str_detect(tweet, "^RT")) %>%
+  mutate(tweet = str_remove_all(tweet, remove_regex)) %>%
+  unnest_tokens(word, tweet) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word, "[a-z]"))
+```
+
+```{r}
+wdscount_2018<- wds_2018 %>%
+  group_by(word) %>%
+  count()%>%
+  arrange(-n)
+```
+
+```{r}
+totwds<-data.frame(sum(wdscount_2018$n))
+```
+
+```{r}
+wdscount_2018<- data.frame(wdscount_2018,totwds)
+freq_2018 <- wdscount_2018$Frequency <- (wdscount_2018$n/wdscount_2018$sum.wdscount_2018.n.)
+```
+
+```{r}
+Wds_2018 <- mutate(wdscount_2018,freq_2018,rank=row_number())
+```
+
+```{r}
+top10_2018 <- head(wdscount_2018,10)
+top10_2018
+```
+
+```{r}
+plot_ly(top10_2018, type='bar', x = top10_2018$word , y = top10_2018$Frequency)
+```
+
+```{r}
+ggplot(Wds_2018,aes(rank,Frequency)) + 
+  geom_line(size = 1.5, alpha = 1, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+```{r}
+big_2018 <- twt_2018 %>%
+ unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+head(big_2018,5)
+```
+
+```{r}
+big_2018<- big_2018 %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+big_2018 <- big_2018 %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)%>%
+  mutate(word1 = str_remove_all(word1, remove_regex))%>%
+  mutate(word2 = str_remove_all(word2, remove_regex))
+```
+
+```{r}
+countbig_2018<- big_2018 %>%
+  count(word1, word2)%>%
+  arrange(-n)%>%
+  na_if("")%>%
+  na.omit()
+```
+
+```{r}
+biggraph_2018 <- countbig_2018 %>%
+  filter(n>5)%>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "open", length = unit(.4, "inches"))
+ggraph(biggraph_2018, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.09, 'inches'), color="black") +
+  geom_node_point(color = "blue", size = 4) +
+  geom_node_text(aes(label = name), vjust = 0.4, hjust = 0.4) +
+  theme_void()
+```
+
+```{r}
+year_2019 <- read_csv("2019.csv")
+```
+
+
+```{r}
+year_2019 <- separate(year_2019,date,into = c("Year", "Month", "Date&Time"),sep = "-",remove = TRUE, convert = TRUE, fill = "right")
+head(year_2019,5)
+```
+
+```{r}
+
+year_2019$tweet <- tolower(year_2019$tweet)
+
+twt_2019 <- select(year_2019, Year, tweet)%>% filter(Year=="2019")
+year_2019 =data.frame(format(as.Date(as.character(twt_2019$Year), format="%Y"),year_2019$tweet))
+head(twt_2019,5)
+```
+
+```{r}
+remove_regex <- "https?://[^\\s]+|&amp;|&lt;|&gt;|\bRT\\b|t.co|http|@|[0-9]"
+wds_2019 <- twt_2019 %>% 
+  filter(!str_detect(tweet, "^RT")) %>%
+  mutate(tweet = str_remove_all(tweet, remove_regex)) %>%
+  unnest_tokens(word, tweet) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word, "[a-z]"))
+```
+
+```{r}
+wdscount_2019<- wds_2019 %>%
+  group_by(word) %>%
+  count()%>%
+  arrange(-n)
+```
+
+```{r}
+totwds<-data.frame(sum(wdscount_2019$n))
+```
+
+```{r}
+wdscount_2019<- data.frame(wdscount_2019,totwds)
+freq_2019 <- wdscount_2019$Frequency <- (wdscount_2019$n/wdscount_2019$sum.wdscount_2019.n.)
+```
+
+```{r}
+wds_2019 <- mutate(wdscount_2019,freq_2019,rank=row_number())
+top10_2019 <- head(wdscount_2019,10)
+top10_2019
+```
+
+```{r}
+plot_ly(top10_2019, type='bar', x = top10_2019$word , y = top10_2019$Frequency)
+```
+
+```{r}
+ggplot(wds_2019,aes(rank,Frequency)) + 
+  geom_line(size = 1.5, alpha = 1, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+```{r}
+big_2019 <- twt_2019 %>%
+ unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+head(big_2019,5)
+```
+
+```{r}
+big_2019<- big_2019 %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+big_2019 <- big_2019 %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)%>%
+  mutate(word1 = str_remove_all(word1, remove_regex))%>%
+  mutate(word2 = str_remove_all(word2, remove_regex))
+```
+
+```{r}
+
+countbig_2019<- big_2019 %>%
+  count(word1, word2)%>%
+  arrange(-n)%>%
+  na_if("")%>%
+  na.omit()
+```
+
+
+```{r}
+biggraph_2019 <- countbig_2019 %>%
+  filter(n>5)%>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "open", length = unit(.3, "inches"))
+ggraph(biggraph_2019, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.07, 'inches'), color="black") +
+  geom_node_point(color = "purple", size = 2) +
+  geom_node_text(aes(label = name), vjust = 0.8, hjust = 0.8) +
+  theme_void()
+```
+
+```{r}
+year_2020 <- read_csv("2020.csv")
+```
+
+```{r}
+year_2020 <- separate(year_2020,date,into = c("Year", "Month", "Date&Time"),sep = "-",remove = TRUE, convert = TRUE, fill = "right")
+head(year_2020,10)
+```
+
+```{r}
+
+year_2020$tweet <- tolower(year_2020$tweet)
+
+twt_2020 <- select(year_2020, Year, tweet)%>% 
+  filter(Year=="2020")
+year_2020 =data.frame(format(as.Date(as.character(twt_2020$Year), format="%Y"),year_2020$tweet))
+head(twt_2020,10)
+```
+
+```{r}
+
+remove_regex <- "https?://[^\\s]+|&amp;|&lt;|&gt;|\bRT\\b|t.co|http|@|[0-9]"
+wds_2020 <- twt_2020 %>% 
+  filter(!str_detect(tweet, "^RT")) %>%
+  mutate(tweet = str_remove_all(tweet, remove_regex)) %>%
+  unnest_tokens(word, tweet) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word, "[a-z]"))
+```
+
+```{r}
+wdscount_2020<- wds_2020 %>%
+  group_by(word) %>%
+  count()%>%
+  arrange(-n)
+```
+
+```{r}
+totwds<-data.frame(sum(wdscount_2020$n))
+```
+
+```{r}
+wdscount_2020<- data.frame(wdscount_2020,totwds)
+freq_2020 <- wdscount_2020$Frequency <- (wdscount_2020$n/wdscount_2020$sum.wdscount_2020.n.)
+```
+
+```{r}
+Wds_2020 <- mutate(wdscount_2020,freq_2020,rank=row_number())
+head(Wds_2020,10)
+```
+
+```{r}
+top10_2020 <- head(wdscount_2020,10)
+top10_2020
+```
+
+```{r}
+plot_ly(top10_2020, type='bar', x = top10_2020$word , y = top10_2020$Frequency)
+```
+
+```{r}
+ggplot(Wds_2020,aes(rank,Frequency)) + 
+  geom_line(size = 1.5, alpha = 1, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+```{r}
+big_2020 <- twt_2020 %>%
+ unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+head(big_2020,10)
+```
+
+```{r}
+
+big_2020<- big_2020 %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+big_2020 <- big_2020 %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)%>%
+  mutate(word1 = str_remove_all(word1, remove_regex))%>%
+  mutate(word2 = str_remove_all(word2, remove_regex))
+```
+
+```{r}
+countbig_2020<- big_2020 %>%
+  count(word1, word2)%>%
+  arrange(-n)%>%
+  na_if("")%>%
+  na.omit()
+```
+
+```{r}
+
+biggraph_2020 <- countbig_2020 %>%
+  filter(n>5)%>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "open", length = unit(.4, "inches"))
+ggraph(biggraph_2020, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.08, 'inches'), color="black") +
+  geom_node_point(color = "green", size = 2) +
+  geom_node_text(aes(label = name), vjust = 0.8, hjust = 0.8) +
+  theme_void()
+```
+
+
+```{r}
+year_2021 <- read_csv("2021.csv")
+```
+
+```{r}
+year_2021 <- separate(year_2021,date,into = c("Year", "Month", "Date&Time"),sep = "-",remove = TRUE, convert = TRUE, fill = "right")
+head(year_2021,10)
+```
+
+```{r}
+
+year_2021$tweet <- tolower(year_2021$tweet)
+
+twt_2021 <- select(year_2021, Year, tweet)%>% filter(Year=="2021")
+year_2021 =data.frame(format(as.Date(as.character(twt_2021$Year), format="%Y"),year_2021$tweet))
+head(twt_2021,10)
+```
+
+```{r}
+
+remove_regex <- "https?://[^\\s]+|&amp;|&lt;|&gt;|\bRT\\b|t.co|http|@|[0-9]"
+wds_2021 <- twt_2021 %>% 
+  filter(!str_detect(tweet, "^RT")) %>%
+  mutate(tweet = str_remove_all(tweet, remove_regex)) %>%
+  unnest_tokens(word, tweet) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word, "[a-z]"))
+```
+
+```{r}
+
+wdscount_2021<- wds_2021 %>%
+  group_by(word) %>%
+  count()%>%
+  arrange(-n)
+```
+
+```{r}
+
+totwds<-data.frame(sum(wdscount_2021$n))
+
+wdscount_2021<- data.frame(wdscount_2021,totwds)
+freq_2021 <- wdscount_2021$Frequency <- (wdscount_2021$n/wdscount_2021$sum.wdscount_2021.n.)
+
+Wds_2021 <- mutate(wdscount_2021,freq_2021,rank=row_number())
+```
+
+```{r}
+top10_2021 <- head(wdscount_2021,10)
+top10_2021
+```
+
+```{r}
+plot_ly(top10_2021, type='bar', x = top10_2021$word , y = top10_2021$Frequency)
+```
+
+```{r}
+ggplot(Wds_2021,aes(rank,Frequency)) + 
+  geom_line(size = 1.5, alpha = 1, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+```{r}
+
+big_2021 <- twt_2021 %>%
+ unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+head(big_2021,10)
+```
+
+```{r}
+
+big_2021<- big_2021 %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+big_2021 <- big_2021 %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)%>%
+  mutate(word1 = str_remove_all(word1, remove_regex))%>%
+  mutate(word2 = str_remove_all(word2, remove_regex))
+```
+
+```{r}
+
+countbig_2021<- big_2021 %>%
+  count(word1, word2)%>%
+  arrange(-n)%>%
+  na_if("")%>%
+  na.omit()
+```
+
+```{r}
+
+biggraph_2021 <- countbig_2021 %>%
+  filter(n>5)%>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "open", length = unit(.2, "inches"))
+ggraph(biggraph_2021, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(0.8, 'inches'), color="black") +
+  geom_node_point(color = "orange", size = 2) +
+  geom_node_text(aes(label = name), vjust = 0.6, hjust = 0.6) +
+  theme_void()
+```
+
+```{r}
+year_2022 <- read_csv("2022.csv")
+```
+
+```{r}
+year_2022 <- separate(year_2022,date,into = c("Year", "Month", "Date&Time"),sep = "-",remove = TRUE, convert = TRUE, fill = "right")
+```
+
+```{r}
+
+year_2022$tweet <- tolower(year_2022$tweet)
+
+twt_2022 <- select(year_2022, Year, tweet)%>% 
+  filter(Year=="2022")
+year_2022 =data.frame(format(as.Date(as.character(twt_2022$Year), format="%Y"),year_2022$tweet))
+head(twt_2022,10)
+```
+
+```{r}
+
+remove_regex <- "https?://[^\\s]+|&amp;|&lt;|&gt;|\bRT\\b|t.co|http|@|[0-9]"
+wds_2022 <- twt_2022 %>% 
+  filter(!str_detect(tweet, "^RT")) %>%
+  mutate(tweet = str_remove_all(tweet, remove_regex)) %>%
+  unnest_tokens(word, tweet) %>%
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"),
+         str_detect(word, "[a-z]"))
+```
+
+```{r}
+
+wdscount_2022<- wds_2022 %>%
+  group_by(word) %>%
+  count()%>%
+  arrange(-n)
+
+totwds<-data.frame(sum(wdscount_2022$n))
+
+wdscount_2022<- data.frame(wdscount_2022,totwds)
+freq_2022 <- wdscount_2022$Frequency <- (wdscount_2022$n/wdscount_2022$sum.wdscount_2022.n.)
+Wds_2022 <- mutate(wdscount_2022,freq_2022,rank=row_number())
+```
+
+```{r}
+top10_2022 <- head(wdscount_2022,10)
+top10_2022
+```
+
+```{r}
+
+plot_ly(top10_2022, type='bar', x = top10_2022$word , y = top10_2022$Frequency)
+```
+
+```{r}
+ggplot(Wds_2022,aes(rank,Frequency)) + 
+  geom_line(size = 1.5 , alpha = 1, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+```{r}
+big_2022 <- twt_2022 %>%
+ unnest_tokens(bigram, tweet, token = "ngrams", n = 2)
+head(big_2022,10)
+```
+
+```{r}
+
+big_2022<- big_2022 %>% 
+  separate(bigram, c("word1", "word2"), sep = " ") 
+big_2022 <- big_2022 %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)%>%
+  mutate(word1 = str_remove_all(word1, remove_regex))%>%
+  mutate(word2 = str_remove_all(word2, remove_regex))  
+```
+
+```{r}
+
+countbig_2022<- big_2022 %>%
+  count(word1, word2)%>%
+  arrange(-n)%>%
+  na_if("")%>%
+  na.omit()
+```
+
+```{r}
+biggraph_2022 <- countbig_2022 %>%
+  filter(n>5)%>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "open", length = unit(.25, "inches"))
+ggraph(biggraph_2022, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.08, 'inches'), color="black") +
+  geom_node_point(color = "yellow", size = 4) +
+  geom_node_text(aes(label = name), vjust = 0.8, hjust = 0.8) +
+  theme_void()
+```
